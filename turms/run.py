@@ -16,8 +16,8 @@ from turms.config import (
 from turms.helpers import (
     build_schema_from_glob,
     build_schema_from_introspect_url,
-    import_string,
 )
+from .utils_isolated import import_string
 from turms.plugins.base import Plugin
 from turms.registry import ClassRegistry
 from turms.stylers.base import Styler
@@ -236,7 +236,7 @@ def generate(project: GraphQLProject) -> str:
 
     if isinstance(project.schema_url, AnyHttpUrl):
         schema = build_schema_from_introspect_url(
-            project.schema_url, project.bearer_token
+            project.schema_url, project.auth
         )
     else:
         schema = build_schema_from_glob(project.schema_url)

@@ -1,7 +1,7 @@
 import builtins
 from pydantic import AnyHttpUrl, BaseModel, BaseSettings, Field, validator
 from typing import Any, Dict, List, Optional, Union
-from turms.helpers import import_string
+from turms.utils_isolated import import_string
 from enum import Enum
 
 
@@ -176,6 +176,13 @@ class Extensions(BaseModel):
     "The turms configuration"
 
 
+class Auth(BaseModel):
+    bearer_token: Optional[str] = None
+    """The bearer token to use for the schema if retrieving it from a remote url"""
+    basic_username: Optional[str] = None
+    basic_password: Optional[str] = None
+
+
 class GraphQLProject(BaseSettings):
     """Configuration for the GraphQL project
 
@@ -189,8 +196,7 @@ class GraphQLProject(BaseSettings):
 
     schema_url: Optional[Union[AnyHttpUrl, str]] = Field(alias="schema", env="schema")
     """The schema url or path to the schema file"""
-    bearer_token: Optional[str] = None
-    """The bearer token to use for the schema if retrieving it from a remote url"""
+    auth: Optional[Auth] = None
     documents: Optional[str]
     """The documents (operations,fragments) to parse"""
     extensions: Extensions

@@ -2,7 +2,8 @@ import os
 import pytest
 from .utils import DIR_NAME
 
-from turms.helpers import import_string, build_schema_from_glob
+from turms.helpers import build_schema_from_glob
+from turms.utils_isolated import import_string
 
 
 def test_faulty_import():

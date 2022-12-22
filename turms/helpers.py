@@ -1,9 +1,11 @@
+import base64
 import json
-from importlib import import_module
 from typing import Any, Dict, Optional
 from urllib import request
 import glob
 import graphql
+
+from turms.config import Auth
 from turms.errors import GenerationError
 
 from graphql import (
@@ -14,34 +16,8 @@ from graphql import (
 )
 
 
-def import_class(module_path, class_name):
-    """Import a module from a module_path and return the class"""
-    module = import_module(module_path)
-    return getattr(module, class_name)
-
-
-def import_string(dotted_path):
-    """
-    Import a dotted module path and return the attribute/class designated by the
-    last name in the path. Raise ImportError if the import failed. Simliar to
-    djangos import_string, but without the cache.
-    """
-
-    try:
-        module_path, class_name = dotted_path.rsplit(".", 1)
-    except ValueError as err:
-        raise ImportError(f"{dotted_path} doesn't look like a module path") from err
-
-    try:
-        return import_class(module_path, class_name)
-    except AttributeError as err:
-        raise ImportError(
-            f"{module_path} does not define a {class_name} attribute/class"
-        ) from err
-
-
 def introspect_url(
-    schema_url: str, bearer_token: Optional[str] = None
+    schema_url: str, auth: Optional[Auth] = None
 ) -> Dict[str, Any]:
     """Introspect a GraphQL schema using introspection query
 
@@ -59,8 +35,11 @@ def introspect_url(
     req = request.Request(schema_url, data=jdata)
     req.add_header("Content-Type", "application/json")
     req.add_header("Accept", "application/json")
-    if bearer_token:
-        req.add_header("Authorization", f"Bearer {bearer_token}")
+    if auth and auth.bearer_token:
+        req.add_header("Authorization", f"Bearer {auth.bearer_token}")
+    elif auth and (auth.basic_username or auth.basic_password):
+        pair = f"{auth.basic_username or ''}:{auth.basic_password or ''}".encode()
+        req.add_header("Authorization", f"Basic {base64.b64encode(pair).decode()}")
     try:
         resp = request.urlopen(req)
         x = json.loads(resp.read().decode("utf-8"))
@@ -74,7 +53,7 @@ def introspect_url(
 
 
 def build_schema_from_introspect_url(
-    schema_url: str, bearer_token: Optional[str] = None
+    schema_url: str, auth: Optional[Auth] = None
 ) -> graphql.GraphQLSchema:
     """Introspect a GraphQL schema using introspection query
 
@@ -88,7 +67,7 @@ def build_schema_from_introspect_url(
     Returns:
         graphql.GraphQLSchema: The parsed GraphQL schema.
     """
-    x = introspect_url(schema_url, bearer_token)
+    x = introspect_url(schema_url, auth)
 
     return build_client_schema(x)
 
