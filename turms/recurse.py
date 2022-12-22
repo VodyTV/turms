@@ -255,7 +255,7 @@ def recurse_annotation(
         if type.description:
             pick_fields.append(ast.Expr(value=ast.Constant(value=type.description)))
 
-        pick_fields += [generate_typename_field(type.name, registry)]
+        # pick_fields += [generate_typename_field(type.name, registry)]
 
         # Single Item collapse
         if len(node.selection_set.selections) == 1:
